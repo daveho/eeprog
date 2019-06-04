@@ -1,0 +1,281 @@
+PCBNEW-LibModule-V1  
+# encoding utf-8
+Units mm
+$INDEX
+SHIELD_ARDUINO_NANO
+$EndINDEX
+$MODULE SHIELD_ARDUINO_NANO
+Po 0 0 0 15 00000000 00000000 ~~
+Li SHIELD_ARDUINO_NANO
+Cd 
+Sc 00000000
+At STD
+Op 0 0 0
+.SolderMask 0
+.SolderPaste 0
+T0 -5.644 -22.789 1.4 1.4 0 0.05 N V 21 "SHIELD_ARDUINO_NANO"
+T1 -4.855 27.891 1.4 1.4 0 0.05 N V 21 "VAL**"
+DS -8.89 -21.59 8.89 -21.59 0.127 27
+DS 8.89 -21.59 8.89 21.59 0.127 27
+DS 8.89 21.59 3 21.59 0.127 27
+DS 3 21.59 -2.97 21.59 0.127 27
+DS -2.97 21.59 -8.89 21.59 0.127 27
+DS -8.89 21.59 -8.89 -21.59 0.127 27
+DC -10.2 -17.8 -10.1 -17.8 0.2 21
+DS -8.89 -21.59 8.89 -21.59 0.127 21
+DS 8.89 -21.59 8.89 21.59 0.127 21
+DS 8.89 21.59 -8.89 21.59 0.127 21
+DS -8.89 21.59 -8.89 -21.59 0.127 21
+DS -9.14 -21.84 9.14 -21.84 0.05 26
+DS 9.14 -21.84 9.14 21.84 0.05 26
+DS -9.14 21.84 -9.14 -21.84 0.05 26
+DC -10.2 -17.8 -10.1 -17.8 0.2 27
+DS -2.97 21.59 -2.97 23.495 0.127 27
+DS -2.97 23.495 3 23.495 0.127 27
+DS 3 23.495 3 21.59 0.127 27
+DS -9.14 21.84 -3.22 21.84 0.05 26
+DS -3.22 21.84 -3.22 23.745 0.05 26
+DS -3.22 23.745 3.25 23.745 0.05 26
+DS 3.25 23.745 3.25 21.84 0.05 26
+DS 3.25 21.84 9.14 21.84 0.05 26
+$PAD
+Sh "1" R 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 -17.78
+$EndPAD
+$PAD
+Sh "2" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 -15.24
+$EndPAD
+$PAD
+Sh "3" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 -12.7
+$EndPAD
+$PAD
+Sh "4" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 -10.16
+$EndPAD
+$PAD
+Sh "5" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 -7.62
+$EndPAD
+$PAD
+Sh "6" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 -5.08
+$EndPAD
+$PAD
+Sh "7" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 -2.54
+$EndPAD
+$PAD
+Sh "8" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 0
+$EndPAD
+$PAD
+Sh "9" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 2.54
+$EndPAD
+$PAD
+Sh "10" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 5.08
+$EndPAD
+$PAD
+Sh "11" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 7.62
+$EndPAD
+$PAD
+Sh "12" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 10.16
+$EndPAD
+$PAD
+Sh "13" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 12.7
+$EndPAD
+$PAD
+Sh "14" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 15.24
+$EndPAD
+$PAD
+Sh "15" C 1.8 1.8 0 0 2700
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po -7.62 17.78
+$EndPAD
+$PAD
+Sh "16" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 17.78
+$EndPAD
+$PAD
+Sh "17" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 15.24
+$EndPAD
+$PAD
+Sh "18" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 12.7
+$EndPAD
+$PAD
+Sh "19" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 10.16
+$EndPAD
+$PAD
+Sh "20" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 7.62
+$EndPAD
+$PAD
+Sh "21" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 5.08
+$EndPAD
+$PAD
+Sh "22" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 2.54
+$EndPAD
+$PAD
+Sh "23" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 0
+$EndPAD
+$PAD
+Sh "24" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 -2.54
+$EndPAD
+$PAD
+Sh "25" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 -5.08
+$EndPAD
+$PAD
+Sh "26" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 -7.62
+$EndPAD
+$PAD
+Sh "27" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 -10.16
+$EndPAD
+$PAD
+Sh "28" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 -12.7
+$EndPAD
+$PAD
+Sh "29" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 -15.24
+$EndPAD
+$PAD
+Sh "30" C 1.8 1.8 0 0 900
+Dr 0.9 0 0
+At STD N 00C0FFFF
+.SolderMask 0
+Ne 0 ""
+Po 7.62 -17.78
+$EndPAD
+$EndMODULE SHIELD_ARDUINO_NANO

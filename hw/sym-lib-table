@@ -1,0 +1,8 @@
+(sym_lib_table
+  (lib (name 74xx)(type Legacy)(uri ${KIPRJMOD}/74xx.lib)(options "")(descr ""))
+  (lib (name ARDUINO_NANO)(type Legacy)(uri ${KIPRJMOD}/ARDUINO_NANO.lib)(options "")(descr ""))
+  (lib (name Connector)(type Legacy)(uri ${KIPRJMOD}/Connector.lib)(options "")(descr ""))
+  (lib (name device)(type Legacy)(uri ${KIPRJMOD}/device.lib)(options "")(descr ""))
+  (lib (name power)(type Legacy)(uri ${KIPRJMOD}/power.lib)(options "")(descr ""))
+  (lib (name memory)(type Legacy)(uri ${KIPRJMOD}/memory.lib)(options "")(descr ""))
+)
