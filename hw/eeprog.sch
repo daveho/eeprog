@@ -265,25 +265,15 @@ Wire Wire Line
 Wire Wire Line
 	3250 4600 2900 4600
 Text Label 2950 4500 0    50   ~ 0
-CE
+ROM_CE
 Text Label 2950 4600 0    50   ~ 0
-WE
+ROM_WE
 Wire Wire Line
 	4600 2000 4200 2000
-Text Label 4250 2000 0    50   ~ 0
-AOE
-Wire Wire Line
-	4600 4250 4200 4250
-Text Label 4250 4250 0    50   ~ 0
-AOE
 Wire Wire Line
 	4600 6750 4200 6750
 Text Label 4250 6750 0    50   ~ 0
 DOE
-Wire Wire Line
-	3250 4700 2900 4700
-Text Label 2950 4700 0    50   ~ 0
-AOE
 Text Notes 6450 6950 0    50   ~ 0
 Programmer for 28C64/28C256 EEPROMs
 $Comp
@@ -364,12 +354,12 @@ Wire Wire Line
 Wire Wire Line
 	7600 3100 7100 3100
 Text Label 7150 2900 0    50   ~ 0
-WE
+ROM_WE
 Text Label 7150 3100 0    50   ~ 0
-CE
+ROM_CE
 Wire Wire Line
-	1500 3300 1150 3300
-Text Label 1200 3300 0    50   ~ 0
+	3250 4800 2900 4800
+Text Label 2950 4800 0    50   ~ 0
 ROM_OE
 Text Label 7150 3000 0    50   ~ 0
 ROM_OE
@@ -466,7 +456,7 @@ $EndComp
 Wire Wire Line
 	7750 5500 7450 5500
 Text Label 7500 5500 0    50   ~ 0
-PL
+RDPL
 Wire Wire Line
 	7750 5700 7450 5700
 Text Label 7500 5700 0    50   ~ 0
@@ -481,23 +471,23 @@ Wire Wire Line
 Wire Wire Line
 	8750 4500 9100 4500
 Text Label 8850 4500 0    50   ~ 0
-RSIN
+RDIN
 Wire Wire Line
-	3250 4800 2900 4800
-Text Label 2950 4800 0    50   ~ 0
+	3250 4700 2900 4700
+Text Label 2950 4700 0    50   ~ 0
 DOE
+Wire Wire Line
+	1500 3300 1150 3300
 Wire Wire Line
 	1500 3400 1150 3400
 Wire Wire Line
 	1500 3500 1150 3500
-Wire Wire Line
-	1500 3600 1150 3600
+Text Label 1200 3300 0    50   ~ 0
+RDPL
 Text Label 1200 3400 0    50   ~ 0
-PL
-Text Label 1200 3500 0    50   ~ 0
 RDCP
-Text Label 1200 3600 0    50   ~ 0
-RSIN
+Text Label 1200 3500 0    50   ~ 0
+RDIN
 Wire Wire Line
 	8250 4200 8550 4200
 Wire Wire Line
@@ -669,6 +659,34 @@ F 1 "GND" H 7305 4477 50  0000 C CNN
 F 2 "" H 7300 4650 50  0001 C CNN
 F 3 "" H 7300 4650 50  0001 C CNN
 	1    7300 4650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4200 2000 4200 2250
+$Comp
+L power:GND #PWR?
+U 1 1 5CF879D2
+P 4200 2250
+F 0 "#PWR?" H 4200 2000 50  0001 C CNN
+F 1 "GND" H 4205 2077 50  0000 C CNN
+F 2 "" H 4200 2250 50  0001 C CNN
+F 3 "" H 4200 2250 50  0001 C CNN
+	1    4200 2250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4600 4250 4200 4250
+Wire Wire Line
+	4200 4250 4200 4500
+$Comp
+L power:GND #PWR?
+U 1 1 5CF87A58
+P 4200 4500
+F 0 "#PWR?" H 4200 4250 50  0001 C CNN
+F 1 "GND" H 4205 4327 50  0000 C CNN
+F 2 "" H 4200 4500 50  0001 C CNN
+F 3 "" H 4200 4500 50  0001 C CNN
+	1    4200 4500
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC
