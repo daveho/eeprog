@@ -42,6 +42,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 uint16_t g_addr;
+uint8_t g_err;
 
 ////////////////////////////////////////////////////////////////////////
 // Code
@@ -83,6 +84,74 @@ void setData(uint8_t data) {
     data >>= 1;
   }
   pulse(RCLK2);
+}
+
+uint8_t read() {
+  while (!Serial.available()) {
+    // do nothing
+  }
+  return (uint8_t) Serial.read();
+}
+
+void scanToEol() {
+  uint8_t c;
+  do {
+    c = read();
+  } while (c != '\n');
+}
+
+uint8_t decodeHex(uint8_t c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
+  } else if (c >= 'A' && c <= 'F') {
+    return 10 + (c - 'A');
+  } else if (c >= 'a' && c <= 'f') {
+    return 10 + (c - 'a');
+  } else {
+    g_err = 1;
+    return 0;
+  }
+}
+
+uint8_t readHex() {
+  g_err = 0;
+  uint8_t c, val = 0;
+  c = read();
+  val = decodeHex(c);
+  if (g_err) return;
+  val <<= 4;
+  c = read();
+  val |= decodeHex(c);
+}
+
+void printErrMsg(const char *msg) {
+  Serial.print("Error: ");
+  Serial.println(msg);
+}
+
+void printOkMsg() {
+  Serial.println("OK");
+}
+
+void handleACmd() {
+  uint16_t addr;
+  addr = readHex();
+  if (g_err) goto err;
+  addr <<= 8;
+  addr |= readHex();
+  if (g_err) goto err;
+  g_addr = addr;
+  scanToEol();
+  printOkMsg();
+  return;
+
+err:
+  printErrMsg("Invalid address");
+}
+
+void handleUnknownCmd() {
+  scanToEol();
+  printErrMsg("Unknown command");
 }
 
 void setup() {
@@ -127,13 +196,17 @@ void setup() {
   digitalWrite(RDPL, HIGH);
 }
 
-uint8_t x;
-
 void loop() {
-  // For now, just test output to 74HC595 shift registers
-  setAddr(g_addr);
-  setData(x);
-  delay(100);
-  g_addr++;
-  x--;
+  for (;;) {
+    Serial.print("> ");
+    uint8_t cmd = read();
+    switch(cmd) {
+      case 'A':
+        handleACmd();
+        break;
+      default:
+        handleUnknownCmd();
+        break;
+    }
+  }
 }
