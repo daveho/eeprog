@@ -101,6 +101,7 @@ void scanToEol() {
 }
 
 uint8_t decodeHex(uint8_t c) {
+  g_err = 0;
   if (c >= '0' && c <= '9') {
     return c - '0';
   } else if (c >= 'A' && c <= 'F') {
@@ -114,7 +115,6 @@ uint8_t decodeHex(uint8_t c) {
 }
 
 uint8_t readHex() {
-  g_err = 0;
   uint8_t c, val = 0;
   c = read();
   val = decodeHex(c);
