@@ -4,6 +4,9 @@
 // Constants
 ////////////////////////////////////////////////////////////////////////
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 0
+
 // Note: constants for I/O pins match the net names used in the
 // schematic
 
@@ -133,6 +136,13 @@ void printOkMsg() {
   Serial.println("OK");
 }
 
+void handleQuesCmd() {
+  Serial.print("eeprog ");
+  Serial.print(VERSION_MAJOR);
+  Serial.print(".");
+  Serial.println(VERSION_MINOR);
+}
+
 void handleACmd() {
   uint16_t addr;
   addr = readHex();
@@ -201,6 +211,9 @@ void loop() {
     Serial.print("> ");
     uint8_t cmd = read();
     switch(cmd) {
+      case '?':
+        handleQuesCmd();
+        break;
       case 'A':
         handleACmd();
         break;
