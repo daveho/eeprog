@@ -44,6 +44,8 @@
 // Data
 ////////////////////////////////////////////////////////////////////////
 
+const char HEX_DIGITS[] = "0123456789ABCDEF";
+
 uint16_t g_addr;
 uint8_t g_err;
 
@@ -89,7 +91,23 @@ void setData(uint8_t data) {
   pulse(RCLK2);
 }
 
-uint8_t read() {
+uint8_t readDataByte() {
+  // parallel load data
+  pulseLow(RDPL);
+
+  // read serial data from shift register
+  uint8_t data = 0;
+  for (uint8_t i = 0; i < 8; i++) {
+    data <<= 1;
+    uint8_t val = digitalRead(RDIN);
+    if (val) { data |= 0x1; }
+    pulse(RDCP);
+  }
+
+  return data;
+}
+
+uint8_t readSer() {
   while (!Serial.available()) {
     // do nothing
   }
@@ -99,7 +117,7 @@ uint8_t read() {
 void scanToEol() {
   uint8_t c;
   do {
-    c = read();
+    c = readSer();
   } while (c != '\n');
 }
 
@@ -119,12 +137,18 @@ uint8_t decodeHex(uint8_t c) {
 
 uint8_t readHex() {
   uint8_t c, val = 0;
-  c = read();
+  c = readSer();
   val = decodeHex(c);
-  if (g_err) return;
+  if (g_err) return 0;
   val <<= 4;
-  c = read();
+  c = readSer();
   val |= decodeHex(c);
+  return val;
+}
+
+void printHex(uint8_t val) {
+  Serial.print(HEX_DIGITS[val >> 4]);
+  Serial.print(HEX_DIGITS[val & 0xF]);
 }
 
 void printErrMsg(const char *msg) {
@@ -140,7 +164,13 @@ void handleQuesCmd() {
   Serial.print("eeprog ");
   Serial.print(VERSION_MAJOR);
   Serial.print(".");
-  Serial.println(VERSION_MINOR);
+  Serial.print(VERSION_MINOR);
+  Serial.print(" addr=");
+  printHex(g_addr >> 8);
+  printHex(g_addr & 0xFF);
+  Serial.println();
+  printOkMsg();
+  scanToEol();
 }
 
 void handleACmd() {
@@ -157,6 +187,39 @@ void handleACmd() {
 
 err:
   printErrMsg("Invalid address");
+}
+
+void handleRCmd() {
+  uint8_t count = readHex();
+  scanToEol();
+  if (g_err) goto err;
+
+  setDataDir(MODE_READ);
+
+  for (uint8_t i = 0; i < count; i++) {
+    setAddr(g_addr);
+
+    // assert chip enable
+    digitalWrite(ROM_CE, LOW);
+    delayMicroseconds(1);
+
+    uint8_t data = readDataByte();
+
+    // de-assert chip enable
+    digitalWrite(ROM_CE, HIGH);
+
+    printHex(data);
+    g_addr++;
+  }
+
+  setDataDir(MODE_WRITE);
+
+  Serial.println();
+  printOkMsg();
+  return;
+
+err:
+  printErrMsg("Invalid read command");
 }
 
 void handleUnknownCmd() {
@@ -209,13 +272,16 @@ void setup() {
 void loop() {
   for (;;) {
     Serial.print("> ");
-    uint8_t cmd = read();
+    uint8_t cmd = readSer();
     switch(cmd) {
       case '?':
         handleQuesCmd();
         break;
       case 'A':
         handleACmd();
+        break;
+      case 'R':
+        handleRCmd();
         break;
       default:
         handleUnknownCmd();
