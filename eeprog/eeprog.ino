@@ -1,4 +1,23 @@
 // eeprog - 28C64/28C256 EEPROM programmer firmware (for Arduino Nano)
+// Copyright (c) 2019, David H. Hovemeyer <david.hovemeyer@gmail.com>
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 ////////////////////////////////////////////////////////////////////////
 // Constants
@@ -46,13 +65,18 @@
 
 const char HEX_DIGITS[] = "0123456789ABCDEF";
 
+// Current address used for read or write operations.
+// Autoincremented to reflect number of bytes read or written.
 uint16_t g_addr;
+
+// Set to 1 if an error occurs (for example, in parsing serial input)
 uint8_t g_err;
 
 ////////////////////////////////////////////////////////////////////////
 // Code
 ////////////////////////////////////////////////////////////////////////
 
+// Set data direction.
 void setDataDir(uint8_t mode) {
   if (mode == MODE_WRITE) {
     digitalWrite(ROM_OE, HIGH); // de-assert EEPROM output enable
@@ -63,16 +87,19 @@ void setDataDir(uint8_t mode) {
   }
 }
 
+// Send a high pulse on given output pin.
 void pulse(uint8_t pin) {
   digitalWrite(pin, HIGH);
   digitalWrite(pin, LOW);
 }
 
+// Send a low pulse on given output pin.
 void pulseLow(uint8_t pin) {
   digitalWrite(pin, LOW);
   digitalWrite(pin, HIGH);
 }
 
+// Drive specified address to the EEPROM's address inputs.
 void setAddr(uint16_t addr) {
   for (uint8_t i = 0; i < 16; i++) {
     digitalWrite(SD0, (addr & 0x1) ? HIGH : LOW);
@@ -82,6 +109,7 @@ void setAddr(uint16_t addr) {
   pulse(RCLK0);
 }
 
+// Drive specified data byte value on the EEPROM's data lines.
 void setData(uint8_t data) {
   for (uint8_t i = 0; i < 8; i++) {
     digitalWrite(SD2, (data & 0x1) ? HIGH : LOW);
@@ -91,6 +119,7 @@ void setData(uint8_t data) {
   pulse(RCLK2);
 }
 
+// Read data byte from the EEPROM's data lines.
 uint8_t readDataByte() {
   // parallel load data
   pulseLow(RDPL);
@@ -107,6 +136,8 @@ uint8_t readDataByte() {
   return data;
 }
 
+// Read a byte from the serial port (i.e., from the user or
+// host program.)
 uint8_t readSer() {
   while (!Serial.available()) {
     // do nothing
@@ -114,6 +145,7 @@ uint8_t readSer() {
   return (uint8_t) Serial.read();
 }
 
+// Read and discard serial input until a newline character is seen.
 void scanToEol() {
   uint8_t c;
   do {
@@ -121,6 +153,8 @@ void scanToEol() {
   } while (c != '\n');
 }
 
+// Decode one hex digit, returning its numeric value.
+// Sets g_err if the specified character is not a hex digit.
 uint8_t decodeHex(uint8_t c) {
   g_err = 0;
   if (c >= '0' && c <= '9') {
@@ -135,6 +169,8 @@ uint8_t decodeHex(uint8_t c) {
   }
 }
 
+// Read one byte of hex data from the serial port.
+// Sets g_err if the input is not valid.
 uint8_t readHex() {
   uint8_t c, val = 0;
   c = readSer();
@@ -146,20 +182,24 @@ uint8_t readHex() {
   return val;
 }
 
+// Print a byte as two hex digits.
 void printHex(uint8_t val) {
   Serial.print(HEX_DIGITS[val >> 4]);
   Serial.print(HEX_DIGITS[val & 0xF]);
 }
 
+// Print an error message.
 void printErrMsg(const char *msg) {
   Serial.print("Error: ");
   Serial.println(msg);
 }
 
+// Print the OK message which indicates a successfully executed command.
 void printOkMsg() {
   Serial.println("OK");
 }
 
+// Handle the '?' command by printing version number and current address.
 void handleQuesCmd() {
   Serial.print("eeprog ");
   Serial.print(VERSION_MAJOR);
@@ -173,6 +213,7 @@ void handleQuesCmd() {
   scanToEol();
 }
 
+// Handle 'A' command to set current address.
 void handleACmd() {
   uint16_t addr;
   addr = readHex();
@@ -189,6 +230,7 @@ err:
   printErrMsg("Invalid address");
 }
 
+// Handle 'R' command to read up to 255 bytes of data from current address.
 void handleRCmd() {
   uint8_t count = readHex();
   scanToEol();
@@ -222,6 +264,7 @@ err:
   printErrMsg("Invalid read command");
 }
 
+// Handle unknown command.
 void handleUnknownCmd() {
   scanToEol();
   printErrMsg("Unknown command");
