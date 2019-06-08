@@ -354,6 +354,9 @@ void handleDCmd() {
   eepromWriteByte(0x2AAA, 0x55, 0);
   eepromWriteByte(0x5555, 0x20, 0);
 
+  // Wait for write cycle to complete.
+  delayMicroseconds(5);
+
   printOkMsg();
 }
 
