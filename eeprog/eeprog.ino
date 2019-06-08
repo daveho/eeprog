@@ -77,6 +77,9 @@ uint16_t g_addr;
 // Set to 1 if an error occurs (for example, in parsing serial input)
 uint8_t g_err;
 
+// Buffer for page write
+uint8_t g_pageBuf[64];
+
 ////////////////////////////////////////////////////////////////////////
 // Code
 ////////////////////////////////////////////////////////////////////////
@@ -360,6 +363,43 @@ void handleDCmd() {
   printOkMsg();
 }
 
+// Handle 'P' command to write a page (up to 64 bytes).
+// Note that there is no check to make sure that the
+// write does not cross a page boundary.
+void handlePCmd() {
+  uint8_t nbytes = readHex();
+  if (g_err || nbytes > 64) goto err_nbytes;
+
+  // Read the data
+  for (uint8_t i = 0; i < nbytes; i++) {
+    g_pageBuf[i] = readHex();
+    if (g_err) goto err_data;
+  }
+
+  scanToEol();
+
+  // Send bytes to the EEPROM
+  for (uint8_t i = 0; i < nbytes; i++) {
+    eepromWriteByte(g_addr, g_pageBuf[i], 0);
+    g_addr++;
+  }
+
+  // Wait for write cycle to complete.
+  delayMicroseconds(5);
+
+  printOkMsg();
+  return;
+
+err_nbytes:
+  scanToEol();
+  printErrMsg("Bad nbytes");
+  return;
+
+err_data:
+  scanToEol();
+  printErrMsg("Bad data");
+}
+
 // Handle unknown command.
 void handleUnknownCmd() {
   scanToEol();
@@ -426,6 +466,9 @@ void loop() {
       break;
     case 'D':
       handleDCmd();
+      break;
+    case 'P':
+      handlePCmd();
       break;
     default:
       handleUnknownCmd();
