@@ -173,9 +173,7 @@ uint8_t readDataByte() {
   return data;
 }
 
-void eepromWriteByte(uint16_t addr, uint8_t data, uint8_t delayMs) {
-  setDataDir(MODE_WRITE);
-
+void eepromWriteByte(uint16_t addr, uint8_t data) {
   // Assert address
   setAddr(addr);
 
@@ -190,11 +188,6 @@ void eepromWriteByte(uint16_t addr, uint8_t data, uint8_t delayMs) {
   delayMicroseconds(1);
   digitalWrite(ROM_WE, HIGH);
   digitalWrite(ROM_CE, HIGH);
-
-  // Wait for write to complete (if delayMs is nonzero)
-  if (delayMs > 0) {
-    delay(delayMs);
-  }
 }
 
 // Read a byte from the serial port (i.e., from the user or
@@ -332,8 +325,11 @@ void handleWCmd() {
 
   setDataDir(MODE_WRITE);
 
-  eepromWriteByte(g_addr, data, 5);
+  eepromWriteByte(g_addr, data);
   g_addr++;
+
+  // Wait for write cycle to complete.
+  delay(5);
 
   printOkMsg();
   return;
@@ -350,15 +346,15 @@ void handleDCmd() {
 
   // See "Software Data Protection Disable Algorithm" section
   // of AT28C256 datasheet.
-  eepromWriteByte(0x5555, 0xAA, 0);
-  eepromWriteByte(0x2AAA, 0x55, 0);
-  eepromWriteByte(0x5555, 0x80, 0);
-  eepromWriteByte(0x5555, 0xAA, 0);
-  eepromWriteByte(0x2AAA, 0x55, 0);
-  eepromWriteByte(0x5555, 0x20, 0);
+  eepromWriteByte(0x5555, 0xAA);
+  eepromWriteByte(0x2AAA, 0x55);
+  eepromWriteByte(0x5555, 0x80);
+  eepromWriteByte(0x5555, 0xAA);
+  eepromWriteByte(0x2AAA, 0x55);
+  eepromWriteByte(0x5555, 0x20);
 
   // Wait for write cycle to complete.
-  delayMicroseconds(5);
+  delay(5);
 
   printOkMsg();
 }
@@ -378,14 +374,16 @@ void handlePCmd() {
 
   scanToEol();
 
+  setDataDir(MODE_WRITE);
+
   // Send bytes to the EEPROM
   for (uint8_t i = 0; i < nbytes; i++) {
-    eepromWriteByte(g_addr, g_pageBuf[i], 0);
+    eepromWriteByte(g_addr, g_pageBuf[i]);
     g_addr++;
   }
 
   // Wait for write cycle to complete.
-  delayMicroseconds(5);
+  delay(5);
 
   printOkMsg();
   return;
