@@ -17,39 +17,39 @@ $EndDescr
 $Comp
 L ARDUINO_NANO:ARDUINO_NANO TB1
 U 1 1 5CF67873
-P 2200 3900
-F 0 "TB1" H 2200 5467 50  0000 C CNN
-F 1 "ARDUINO_NANO" H 2200 5376 50  0000 C CNN
-F 2 "SHIELD_ARDUINO_NANO" H 2200 3900 50  0001 L BNN
-F 3 "DFRobot" H 2200 3900 50  0001 L BNN
-F 4 "Dev.kit: Arduino; UART; ICSP, USB B mini, pin strips" H 2200 3900 50  0001 L BNN "Field4"
-F 5 "None" H 2200 3900 50  0001 L BNN "Field5"
-F 6 "None" H 2200 3900 50  0001 L BNN "Field6"
-F 7 "ARDUINO NANO" H 2200 3900 50  0001 L BNN "Field7"
-F 8 "Unavailable" H 2200 3900 50  0001 L BNN "Field8"
-	1    2200 3900
+P 2200 2550
+F 0 "TB1" H 2200 4117 50  0000 C CNN
+F 1 "ARDUINO_NANO" H 2200 4026 50  0000 C CNN
+F 2 "SHIELD_ARDUINO_NANO" H 2200 2550 50  0001 L BNN
+F 3 "DFRobot" H 2200 2550 50  0001 L BNN
+F 4 "Dev.kit: Arduino; UART; ICSP, USB B mini, pin strips" H 2200 2550 50  0001 L BNN "Field4"
+F 5 "None" H 2200 2550 50  0001 L BNN "Field5"
+F 6 "None" H 2200 2550 50  0001 L BNN "Field6"
+F 7 "ARDUINO NANO" H 2200 2550 50  0001 L BNN "Field7"
+F 8 "Unavailable" H 2200 2550 50  0001 L BNN "Field8"
+	1    2200 2550
 	1    0    0    -1  
 $EndComp
 $Comp
 L power:VCC #PWR?
 U 1 1 5CF6793D
-P 3100 2350
-F 0 "#PWR?" H 3100 2200 50  0001 C CNN
-F 1 "VCC" H 3117 2523 50  0000 C CNN
-F 2 "" H 3100 2350 50  0001 C CNN
-F 3 "" H 3100 2350 50  0001 C CNN
-	1    3100 2350
+P 3100 1000
+F 0 "#PWR?" H 3100 850 50  0001 C CNN
+F 1 "VCC" H 3117 1173 50  0000 C CNN
+F 2 "" H 3100 1000 50  0001 C CNN
+F 3 "" H 3100 1000 50  0001 C CNN
+	1    3100 1000
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2900 2800 3100 2800
+	2900 1450 3100 1450
 Wire Wire Line
-	3100 2800 3100 2600
+	3100 1450 3100 1250
 Wire Wire Line
-	2900 2600 3100 2600
-Connection ~ 3100 2600
+	2900 1250 3100 1250
+Connection ~ 3100 1250
 Wire Wire Line
-	3100 2600 3100 2350
+	3100 1250 3100 1000
 $Comp
 L 74xx:74HC595 U1
 U 1 1 5CF6A10C
@@ -62,35 +62,35 @@ F 3 "" H 5000 1800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2900 5200 3100 5200
+	2900 3850 3100 3850
 Wire Wire Line
-	3100 5200 3100 5450
+	3100 3850 3100 4100
 $Comp
 L power:GND #PWR?
 U 1 1 5CF6A4DB
-P 3100 5450
-F 0 "#PWR?" H 3100 5200 50  0001 C CNN
-F 1 "GND" H 3105 5277 50  0000 C CNN
-F 2 "" H 3100 5450 50  0001 C CNN
-F 3 "" H 3100 5450 50  0001 C CNN
-	1    3100 5450
+P 3100 4100
+F 0 "#PWR?" H 3100 3850 50  0001 C CNN
+F 1 "GND" H 3105 3927 50  0000 C CNN
+F 2 "" H 3100 4100 50  0001 C CNN
+F 3 "" H 3100 4100 50  0001 C CNN
+	1    3100 4100
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	1500 4400 1150 4400
+	1500 3050 1150 3050
 Wire Wire Line
-	1500 4500 1150 4500
+	1500 3150 1150 3150
 Wire Wire Line
-	1500 4700 1150 4700
+	1500 3350 1150 3350
 Wire Wire Line
-	1500 4600 1150 4600
-Text Label 1200 4400 0    50   ~ 0
+	1500 3250 1150 3250
+Text Label 1200 3050 0    50   ~ 0
 SD0
-Text Label 1200 4500 0    50   ~ 0
+Text Label 1200 3150 0    50   ~ 0
 SCLK0
-Text Label 1200 4700 0    50   ~ 0
+Text Label 1200 3350 0    50   ~ 0
 RCLK0
-Text Label 1200 4600 0    50   ~ 0
+Text Label 1200 3250 0    50   ~ 0
 SCLR0
 Wire Wire Line
 	4600 1400 4200 1400
@@ -139,20 +139,20 @@ SCLR2
 Text Label 4250 6650 0    50   ~ 0
 RCLK2
 Wire Wire Line
-	2900 4200 3250 4200
+	2900 2850 3250 2850
 Wire Wire Line
-	2900 4300 3250 4300
+	2900 2950 3250 2950
 Wire Wire Line
-	2900 4400 3250 4400
-Text Label 2950 4200 0    50   ~ 0
+	2900 3050 3250 3050
+Text Label 2950 2850 0    50   ~ 0
 SCLK2
-Text Label 2950 4300 0    50   ~ 0
+Text Label 2950 2950 0    50   ~ 0
 SCLR2
-Text Label 2950 4400 0    50   ~ 0
+Text Label 2950 3050 0    50   ~ 0
 RCLK2
 Wire Wire Line
-	1150 4800 1500 4800
-Text Label 1200 4800 0    50   ~ 0
+	1150 3450 1500 3450
+Text Label 1200 3450 0    50   ~ 0
 SD2
 Wire Wire Line
 	5000 1200 5300 1200
@@ -261,12 +261,12 @@ F 3 "" H 5000 7400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3250 4500 2900 4500
+	3250 3150 2900 3150
 Wire Wire Line
-	3250 4600 2900 4600
-Text Label 2950 4500 0    50   ~ 0
+	3250 3250 2900 3250
+Text Label 2950 3150 0    50   ~ 0
 ROM_CE
-Text Label 2950 4600 0    50   ~ 0
+Text Label 2950 3250 0    50   ~ 0
 ROM_WE
 Wire Wire Line
 	4600 2000 4200 2000
@@ -358,8 +358,8 @@ ROM_WE
 Text Label 7150 3100 0    50   ~ 0
 ROM_CE
 Wire Wire Line
-	3250 4800 2900 4800
-Text Label 2950 4800 0    50   ~ 0
+	3250 3450 2900 3450
+Text Label 2950 3450 0    50   ~ 0
 ROM_OE
 Text Label 7150 3000 0    50   ~ 0
 ROM_OE
@@ -473,20 +473,20 @@ Wire Wire Line
 Text Label 8850 4500 0    50   ~ 0
 RDIN
 Wire Wire Line
-	3250 4700 2900 4700
-Text Label 2950 4700 0    50   ~ 0
+	3250 3350 2900 3350
+Text Label 2950 3350 0    50   ~ 0
 DOE
 Wire Wire Line
-	1500 3300 1150 3300
+	1500 1950 1150 1950
 Wire Wire Line
-	1500 3400 1150 3400
+	1500 2050 1150 2050
 Wire Wire Line
-	1500 3500 1150 3500
-Text Label 1200 3300 0    50   ~ 0
+	1500 2150 1150 2150
+Text Label 1200 1950 0    50   ~ 0
 RDPL
-Text Label 1200 3400 0    50   ~ 0
+Text Label 1200 2050 0    50   ~ 0
 RDCP
-Text Label 1200 3500 0    50   ~ 0
+Text Label 1200 2150 0    50   ~ 0
 RDIN
 Wire Wire Line
 	8250 4200 8550 4200
@@ -689,4 +689,64 @@ F 3 "" H 4200 4500 50  0001 C CNN
 	1    4200 4500
 	1    0    0    -1  
 $EndComp
+$Comp
+L device:R_Network08 RN1
+U 1 1 5CFC8FF9
+P 2250 6050
+F 0 "RN1" V 1633 6050 50  0000 C CNN
+F 1 "10k" V 1724 6050 50  0000 C CNN
+F 2 "Resistors_THT:R_Array_SIP9" V 2725 6050 50  0001 C CNN
+F 3 "" H 2250 6050 50  0001 C CNN
+	1    2250 6050
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	2450 5650 2650 5650
+Wire Wire Line
+	2650 5650 2650 5350
+$Comp
+L power:VCC #PWR?
+U 1 1 5CFD929D
+P 2650 5350
+F 0 "#PWR?" H 2650 5200 50  0001 C CNN
+F 1 "VCC" H 2667 5523 50  0000 C CNN
+F 2 "" H 2650 5350 50  0001 C CNN
+F 3 "" H 2650 5350 50  0001 C CNN
+	1    2650 5350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2050 5650 1700 5650
+Wire Wire Line
+	2050 5750 1700 5750
+Wire Wire Line
+	2050 5850 1700 5850
+Wire Wire Line
+	2050 5950 1700 5950
+Wire Wire Line
+	2050 6050 1700 6050
+Wire Wire Line
+	2050 6150 1700 6150
+Wire Wire Line
+	2050 6250 1700 6250
+Wire Wire Line
+	2050 6350 1700 6350
+Text Label 1800 5650 0    50   ~ 0
+D0
+Text Label 1800 5750 0    50   ~ 0
+D1
+Text Label 1800 5850 0    50   ~ 0
+D2
+Text Label 1800 5950 0    50   ~ 0
+D3
+Text Label 1800 6050 0    50   ~ 0
+D4
+Text Label 1800 6150 0    50   ~ 0
+D5
+Text Label 1800 6250 0    50   ~ 0
+D6
+Text Label 1800 6350 0    50   ~ 0
+D7
+Text Notes 1550 6900 0    50   ~ 0
+Pull-up resistors for data lines.\nShown as a resistor network,\nbut it could also be 10 individual\n10k resistors.
 $EndSCHEMATC
