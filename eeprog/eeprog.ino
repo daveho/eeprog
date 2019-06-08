@@ -27,7 +27,12 @@
 #define VERSION_MINOR 0
 
 // Note: constants for I/O pins match the net names used in the
-// schematic
+// schematic.  Also: there are some hard-coded references to
+// AVR ports and pin numbers because digitalWrite is too slow
+// to meet timing requirements for page write mode and software
+// write protection disable, and direct bit-banging allows
+// sufficiently fast output of addresses and data bytes via the
+// 74HC595 shift registers.
 
 // Control pins for the 2 74HC595 shift registers used to
 // generate addresses
@@ -101,22 +106,51 @@ void pulseLow(uint8_t pin) {
 
 // Drive specified address to the EEPROM's address inputs.
 void setAddr(uint16_t addr) {
+  // digitalWrite is too slow to meet tBLC (byte load cycle time),
+  // so we directly twiddle bits in PORTD:
+  //   SD0 is PD2
+  //   SCLK0 is PD3
+  //   RCLK0 is PD5
   for (uint8_t i = 0; i < 16; i++) {
-    digitalWrite(SD0, (addr & 0x1) ? HIGH : LOW);
-    pulse(SCLK0);
+    // Set data output (SD0)
+    if (addr & 0x1) {
+      PORTD |= (1 << 2);
+    } else {
+      PORTD &= ~(1 << 2);
+    }
+    // Pulse SCLKC0
+    PORTD |= (1 << 3);
+    PORTD &= ~(1 << 3);
+    // Shift next address bit into place
     addr >>= 1;
   }
-  pulse(RCLK0);
+  // Pulse RCLK0
+  PORTD |= (1 << 5);
+  PORTD &= ~(1 << 5);
 }
 
 // Drive specified data byte value on the EEPROM's data lines.
 void setData(uint8_t data) {
+  // digitalWrite is too slow, twiddle bits in PORTD and PORTB:
+  //   SD2 is PD6
+  //   SCLK2 is PD6
+  //   RCLK2 is PB1
   for (uint8_t i = 0; i < 8; i++) {
-    digitalWrite(SD2, (data & 0x1) ? HIGH : LOW);
-    pulse(SCLK2);
+    // Set data output (SD2)
+    if (data & 0x1) {
+      PORTD |= (1 << 6);
+    } else {
+      PORTD &= ~(1 << 6);
+    }
+    // Pulse SCLK2
+    PORTD |= (1 << 7);
+    PORTD &= ~(1 << 7);
+    // Shift next data bit into place
     data >>= 1;
   }
-  pulse(RCLK2);
+  // Pulse RCLK2
+  PORTB |= (1 << 1);
+  PORTB &= ~(1 << 1);
 }
 
 // Read data byte from the EEPROM's data lines.
@@ -134,6 +168,30 @@ uint8_t readDataByte() {
   }
 
   return data;
+}
+
+void eepromWriteByte(uint16_t addr, uint8_t data, uint8_t delayMs) {
+  setDataDir(MODE_WRITE);
+
+  // Assert address
+  setAddr(addr);
+
+  // Assert data
+  setData(data);
+
+  // Pulse CE and WE low for tWP, which according to both the
+  // CAT28C256 and AT28C256 datasheets must be at least 100 ns.
+  // One microsecond should work fine.
+  digitalWrite(ROM_CE, LOW);
+  digitalWrite(ROM_WE, LOW);
+  delayMicroseconds(1);
+  digitalWrite(ROM_WE, HIGH);
+  digitalWrite(ROM_CE, HIGH);
+
+  // Wait for write to complete (if delayMs is nonzero)
+  if (delayMs > 0) {
+    delay(delayMs);
+  }
 }
 
 // Read a byte from the serial port (i.e., from the user or
@@ -240,15 +298,16 @@ void handleRCmd() {
 
   for (uint8_t i = 0; i < count; i++) {
     setAddr(g_addr);
+    delayMicroseconds(1);
 
-//    // assert chip enable
-//    digitalWrite(ROM_CE, LOW);
+    // assert chip enable
+    digitalWrite(ROM_CE, LOW);
     delayMicroseconds(1);
 
     uint8_t data = readDataByte();
 
-//    // de-assert chip enable
-//    digitalWrite(ROM_CE, HIGH);
+    // de-assert chip enable
+    digitalWrite(ROM_CE, HIGH);
 
     printHex(data);
     g_addr++;
@@ -270,24 +329,7 @@ void handleWCmd() {
 
   setDataDir(MODE_WRITE);
 
-  // Assert address
-  setAddr(g_addr);
-
-  // Assert data
-  setData(data);
-
-  delayMicroseconds(1);
-
-  // Pulse WE low for tWP, which according to both the
-  // CAT28C256 and AT28C256 datasheets must be at least 100 ns.
-  // One microsecond should work fine.
-  digitalWrite(ROM_WE, LOW);
-  delayMicroseconds(1);
-  digitalWrite(ROM_WE, HIGH);
-
-  // Wait 5 ms for write to complete.
-  delay(5);
-
+  eepromWriteByte(g_addr, data, 5);
   g_addr++;
 
   printOkMsg();
@@ -295,6 +337,24 @@ void handleWCmd() {
 
 err:
   printErrMsg("Invalid data");
+}
+
+// Handle 'D' command to disable software write protection.
+void handleDCmd() {
+  scanToEol();
+
+  setDataDir(MODE_WRITE);
+
+  // See "Software Data Protection Disable Algorithm" section
+  // of AT28C256 datasheet.
+  eepromWriteByte(0x5555, 0xAA, 0);
+  eepromWriteByte(0x2AAA, 0x55, 0);
+  eepromWriteByte(0x5555, 0x80, 0);
+  eepromWriteByte(0x5555, 0xAA, 0);
+  eepromWriteByte(0x2AAA, 0x55, 0);
+  eepromWriteByte(0x5555, 0x20, 0);
+
+  printOkMsg();
 }
 
 // Handle unknown command.
@@ -321,11 +381,9 @@ void setup() {
   pinMode(RDCP, OUTPUT);
   pinMode(RDIN, INPUT);
 
-  // De-assert EEPROM write enable
+  // De-assert EEPROM chip enable and write enable
+  digitalWrite(ROM_CE, HIGH);
   digitalWrite(ROM_WE, HIGH);
-
-  // Just leave the EEPROM chip enable asserted
-  digitalWrite(ROM_CE, LOW);
 
   // Set initial data direction
   setDataDir(MODE_WRITE);
@@ -362,6 +420,9 @@ void loop() {
       break;
     case 'W':
       handleWCmd();
+      break;
+    case 'D':
+      handleDCmd();
       break;
     default:
       handleUnknownCmd();
