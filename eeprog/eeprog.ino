@@ -241,20 +241,18 @@ void handleRCmd() {
   for (uint8_t i = 0; i < count; i++) {
     setAddr(g_addr);
 
-    // assert chip enable
-    digitalWrite(ROM_CE, LOW);
+//    // assert chip enable
+//    digitalWrite(ROM_CE, LOW);
     delayMicroseconds(1);
 
     uint8_t data = readDataByte();
 
-    // de-assert chip enable
-    digitalWrite(ROM_CE, HIGH);
+//    // de-assert chip enable
+//    digitalWrite(ROM_CE, HIGH);
 
     printHex(data);
     g_addr++;
   }
-
-  setDataDir(MODE_WRITE);
 
   Serial.println();
   printOkMsg();
@@ -262,6 +260,41 @@ void handleRCmd() {
 
 err:
   printErrMsg("Invalid read command");
+}
+
+// Handle 'W' command to write one byte at current address.
+void handleWCmd() {
+  uint8_t data = readHex();
+  scanToEol();
+  if (g_err) goto err;
+
+  setDataDir(MODE_WRITE);
+
+  // Assert address
+  setAddr(g_addr);
+
+  // Assert data
+  setData(data);
+
+  delayMicroseconds(1);
+
+  // Pulse WE low for tWP, which according to both the
+  // CAT28C256 and AT28C256 datasheets must be at least 100 ns.
+  // One microsecond should work fine.
+  digitalWrite(ROM_WE, LOW);
+  delayMicroseconds(1);
+  digitalWrite(ROM_WE, HIGH);
+
+  // Wait 5 ms for write to complete.
+  delay(5);
+
+  g_addr++;
+
+  printOkMsg();
+  return;
+
+err:
+  printErrMsg("Invalid data");
 }
 
 // Handle unknown command.
@@ -288,9 +321,11 @@ void setup() {
   pinMode(RDCP, OUTPUT);
   pinMode(RDIN, INPUT);
 
-  // De-assert EEPROM chip enable and write enable
-  digitalWrite(ROM_CE, HIGH);
+  // De-assert EEPROM write enable
   digitalWrite(ROM_WE, HIGH);
+
+  // Just leave the EEPROM chip enable asserted
+  digitalWrite(ROM_CE, LOW);
 
   // Set initial data direction
   setDataDir(MODE_WRITE);
@@ -313,22 +348,23 @@ void setup() {
 }
 
 void loop() {
-  for (;;) {
-    Serial.print("> ");
-    uint8_t cmd = readSer();
-    switch(cmd) {
-      case '?':
-        handleQuesCmd();
-        break;
-      case 'A':
-        handleACmd();
-        break;
-      case 'R':
-        handleRCmd();
-        break;
-      default:
-        handleUnknownCmd();
-        break;
-    }
+  Serial.print("> ");
+  uint8_t cmd = readSer();
+  switch(cmd) {
+    case '?':
+      handleQuesCmd();
+      break;
+    case 'A':
+      handleACmd();
+      break;
+    case 'R':
+      handleRCmd();
+      break;
+    case 'W':
+      handleWCmd();
+      break;
+    default:
+      handleUnknownCmd();
+      break;
   }
 }
