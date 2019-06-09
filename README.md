@@ -2,9 +2,9 @@
 
 This is an attempt to make a programmer for 28C64 and 28C256 EEPROMs using an Arduino Nano and 74HC595/74HC165 shift registers.
 
-The hardware seems to work.
+The hardware seems to work.  The (KiCad) schematic is in the [hw](hw) directory.
 
-The firmware *seems* to work correctly at this point.  It can:
+The firmware (in the [eeprog](eeprog) directory) *seems* to work correctly at this point.  It can:
 
 * read data from the EEPROM
 * write single bytes to the EEPROM
