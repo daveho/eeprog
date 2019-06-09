@@ -60,6 +60,10 @@
 #define RDCP       A1   // shift register clock
 #define RDIN       A2   // input from shift register
 
+// I/O pins for data direction indicator LEDs
+#define READ_LED   A3
+#define WRITE_LED  A4
+
 // Data direction modes
 #define MODE_READ  0    // read data from EEPROM
 #define MODE_WRITE 1    // write data to EEPROM
@@ -89,9 +93,13 @@ void setDataDir(uint8_t mode) {
   if (mode == MODE_WRITE) {
     digitalWrite(ROM_OE, HIGH); // de-assert EEPROM output enable
     digitalWrite(DOE, LOW);     // assert 74HC595 data output enable
+    digitalWrite(READ_LED, LOW);
+    digitalWrite(WRITE_LED, HIGH);
   } else {
     digitalWrite(DOE, HIGH);    // de-assert 74HC595 data output enable
     digitalWrite(ROM_OE, LOW);  // assert EEPROM output enable
+    digitalWrite(READ_LED, HIGH);
+    digitalWrite(WRITE_LED, LOW);
   }
 }
 
@@ -462,6 +470,8 @@ void setup() {
   pinMode(RDPL, OUTPUT);
   pinMode(RDCP, OUTPUT);
   pinMode(RDIN, INPUT);
+  pinMode(READ_LED, OUTPUT);
+  pinMode(WRITE_LED, OUTPUT);
 
   // De-assert EEPROM chip enable and write enable
   digitalWrite(ROM_CE, HIGH);
