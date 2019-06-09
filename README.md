@@ -4,12 +4,38 @@ This is an attempt to make a programmer for 28C64 and 28C256 EEPROMs using an Ar
 
 The hardware seems to work.
 
-So far, the firmware can successfully:
+The firmware *seems* to work correctly at this point.  It can:
 
 * read data from the EEPROM
 * write single bytes to the EEPROM
+* write a page (up to 64 bytes) to the EEPROM
 * disable write protection
-
-Page mode still needs to be implemented, but the timing requirements are similar to disabling write protection, so hopefully it won't be too difficult to implement.
+* enable write protection
+* perform a software chip erase
 
 There is no host software yet.
+
+## Firmware protocol
+
+The firmware listens for commands on the UART (57600 bps, 8N1).  You can interact with it using the Arduino serial monitor or a terminal program.
+
+The firmware prints the prompt `> ` (greater than followed by space) when it is ready to receive a command.
+
+The commands are as follows.  All data and numeric parameters are specified using hexadecimal.  *aaaa* is an address.  *cc* is a count.  *dd* is a data byte.  Each command must be terminated by a line ending (either CRLF or just LF).  If a command has output, it will be on a single line.  All commands output either an "Ok" line or an "Error: ..." line depending on whether the command succeeded or failed.  The "Ok" output is generated after the command's output (if any).
+
+All read and write commands increment the current address by the number of bytes read or written.
+
+Command | Meaning | Example | Output
+------- | ------- | ------- | ------
+?       | show version and current address | `?` | None
+A*aaaa* | set current address | `A1F00` | None
+W*dd*   | write one byte at current address | `W3E` | None
+R*cc*   | read *cc* bytes of data at current address | `R10` | Data values read
+P*ccdddd...* | write *cc* bytes of data at current address | `P05163bde4951` | None
+D | disable write protection | `D` | None
+N | enable write protection | `N` | None
+E | perform software chip erase | `E` | None
+
+Note that the `P` command can write up to 64 bytes (one "page"), and the data written should not cross a page address boundary.  I.e., if writing 64 bytes, the current address should be a multiple of 64.
+
+The software chip erase may not work on non-Atmel EEPROM chips.

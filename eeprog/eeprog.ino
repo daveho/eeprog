@@ -24,7 +24,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 0
+#define VERSION_MINOR 1
 
 // Note: constants for I/O pins match the net names used in the
 // schematic.  Also: there are some hard-coded references to
@@ -359,6 +359,47 @@ void handleDCmd() {
   printOkMsg();
 }
 
+// Handle 'N' command to enable software write protection.
+void handleNCmd() {
+  scanToEol();
+
+  setDataDir(MODE_WRITE);
+
+  // See Figure 10 ("Write Sequence for Activating Software
+  // Data Protection") in the CAT28C256 datasheet.
+  eepromWriteByte(0x5555, 0xAA);
+  eepromWriteByte(0x2AAA, 0x55);
+  eepromWriteByte(0x5555, 0xA0);
+
+  // Wait for write cycle to complete.
+  delay(5);
+
+  printOkMsg();
+}
+
+// Handle 'E' command to perform a software erase.
+// It's possible that only Atmel chips support this:
+// the CAT28C256 datasheet doesn't mention software erase.
+void handleECmd() {
+  scanToEol();
+
+  setDataDir(MODE_WRITE);
+
+  // See Atmel "Software Chip Erase" application note
+  // (http://db.zmitac.aei.polsl.pl/Electronics_Firm_Docs/ATMEL/Atmel/acrobat/doc0544.pdf).
+  eepromWriteByte(0x5555, 0xAA);
+  eepromWriteByte(0x2AAA, 0x55);
+  eepromWriteByte(0x5555, 0x80);
+  eepromWriteByte(0x5555, 0xAA);
+  eepromWriteByte(0x2AAA, 0x55);
+  eepromWriteByte(0x5555, 0x10);
+
+  // Wait for erase cycle to complete
+  delay(20);
+
+  printOkMsg();
+}
+
 // Handle 'P' command to write a page (up to 64 bytes).
 // Note that there is no check to make sure that the
 // write does not cross a page boundary.
@@ -464,6 +505,12 @@ void loop() {
       break;
     case 'D':
       handleDCmd();
+      break;
+    case 'N':
+      handleNCmd();
+      break;
+    case 'E':
+      handleECmd();
       break;
     case 'P':
       handlePCmd();
