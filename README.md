@@ -27,7 +27,7 @@ All read and write commands increment the current address by the number of bytes
 
 Command | Meaning | Example | Output
 ------- | ------- | ------- | ------
-?       | show version and current address | `?` | None
+?       | show version and current address | `?` | Firmware version and current address
 A*aaaa* | set current address | `A1F00` | None
 W*dd*   | write one byte at current address | `W3E` | None
 R*cc*   | read *cc* bytes of data at current address | `R10` | Data values read
