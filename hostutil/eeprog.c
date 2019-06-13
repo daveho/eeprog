@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// The serial communication code was shamelessly stolen from the following
+// The serial communication setup code was shamelessly stolen from the following
 // StackOverflow page:
 //   https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
 
@@ -83,12 +83,30 @@ int set_interface_attribs(int fd, int speed) {
 	return 0;
 }
 
-void error(const char *fmt, ...) {
+void display_error(const char *tag, const char *fmt, va_list args) {
+	fprintf(stderr, "%s: ", tag);
+	vfprintf(stderr, fmt, args);
+}
+
+// Function for a fatal usage error.
+void usage_error(const char *fmt, ...) {
 	va_list args;
 
 	va_start(args, fmt);
-	fprintf(stderr, "Error: ");
-	vfprintf(stderr, fmt, args);
+	display_error("Error", fmt, args);
+	fprintf(stderr, "\n");
+	va_end(args);
+
+	exit(1);
+}
+
+// Function for a fatal runtime error, in which errno is set
+// and we can print a meaningful diagnostic.
+void fatal(const char *fmt, ...) {
+	va_list args;
+
+	va_start(args, fmt);
+	display_error("Error", fmt, args);
 	fprintf(stderr, "\n");
 	va_end(args);
 
@@ -99,8 +117,8 @@ void warn(const char *fmt, ...) {
 	va_list args;
 
 	va_start(args, fmt);
-	fprintf(stderr, "Warning: ");
-	vfprintf(stderr, fmt, args);
+	display_error("Warning", fmt, args);
+	fprintf(stderr, ": %s", strerror(errno));
 	fprintf(stderr, "\n");
 	va_end(args);
 }
@@ -121,27 +139,27 @@ void showHelp() {
 
 void *xmalloc(size_t n) {
 	void *buf = malloc(n);
-	if (!buf) { error("memory allocation failure"); }
+	if (!buf) { fatal("memory allocation failure"); }
 	return buf;
 }
 
 char *xstrdup(const char *s) {
 	char *copy = strdup(s);
-	if (!copy) { error("memory allocation failure"); }
+	if (!copy) { fatal("memory allocation failure"); }
 	return copy;
 }
 
-struct IO *io_open(const char *fileName) {
+struct IO *io_open(const char *fileName, int mode) {
 	struct IO *io = xmalloc(sizeof(struct IO));
-	io->fd = open(fileName, O_RDONLY);
-	if (io->fd < 0) { error("couldn't open '%s'", fileName); }
+	io->fd = open(fileName, mode);
+	if (io->fd < 0) { fatal("couldn't open '%s'", fileName); }
 	io->fileName = fileName;
 	return io;
 }
 
 off_t io_getSize(struct IO *io) {
 	struct stat st;
-	if (fstat(io->fd, &st) < 0) { error("couldn't get size of file '%s'", io->fileName); }
+	if (fstat(io->fd, &st) < 0) { fatal("couldn't get size of file '%s'", io->fileName); }
 	return st.st_size;
 }
 
@@ -149,7 +167,7 @@ void io_read(struct IO *io, uint8_t *buf, off_t size) {
 	ssize_t nread = 0;
 	while (nread < size) {
 		ssize_t rc = read(io->fd, buf + nread, size);
-		if (rc < 0) { error("error reading data from '%s'", io->fileName); }
+		if (rc < 0) { fatal("error reading data from '%s'", io->fileName); }
 		nread += rc;
 	}
 }
@@ -168,7 +186,7 @@ int main(int argc, char **argv) {
 			{
 				int readSize;
 				if (sscanf(optarg, "%d", &readSize) != 1) {
-					error("invalid data size '%s'", optarg);
+					usage_error("invalid data size '%s'", optarg);
 				}
 				g_dataReadSize = readSize;
 			}
@@ -191,22 +209,27 @@ int main(int argc, char **argv) {
 	}
 
 	if (!g_port) {
-		error("comm port must be specified");
+		usage_error("comm port must be specified");
 	}
 
 	if (!g_fileName && !g_outputFileName) {
-		error("either -f or -o must be specified");
+		usage_error("either -f or -o must be specified");
 	}
 	if (g_outputFileName && g_dataReadSize < 0) {
-		error("-r must be specified to specify read size");
+		usage_error("-r must be specified to specify read size");
+	}
+
+	struct IO *comm = io_open(g_port, O_RDWR);
+	if (set_interface_attribs(comm->fd, B57600) != 0) {
+		fatal("could not configure communication parameters for '%s'", g_port);
 	}
 
 	struct IO *dataIn = NULL;
 
 	if (g_fileName) {
-		dataIn = io_open(g_fileName);
+		dataIn = io_open(g_fileName, O_RDONLY);
 		g_dataSize = io_getSize(dataIn);
-		if (g_dataSize > 65536) { error("Size of file '%s' exceeds 64K", g_fileName); }
+		if (g_dataSize > 65536) { usage_error("Size of file '%s' exceeds 64K", g_fileName); }
 		io_read(dataIn, g_dataBuf, g_dataSize);
 	}
 
