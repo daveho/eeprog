@@ -35,7 +35,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-struct Data {
+struct IO {
 	const char *fileName;
 	int fd;
 };
@@ -131,25 +131,25 @@ char *xstrdup(const char *s) {
 	return copy;
 }
 
-struct Data *data_open(const char *fileName) {
-	struct Data *dat = xmalloc(sizeof(struct Data));
-	dat->fd = open(fileName, O_RDONLY);
-	if (dat->fd < 0) { error("couldn't open data file '%s'", fileName); }
-	dat->fileName = fileName;
-	return dat;
+struct IO *io_open(const char *fileName) {
+	struct IO *io = xmalloc(sizeof(struct IO));
+	io->fd = open(fileName, O_RDONLY);
+	if (io->fd < 0) { error("couldn't open '%s'", fileName); }
+	io->fileName = fileName;
+	return io;
 }
 
-off_t data_getSize(struct Data *dat) {
+off_t io_getSize(struct IO *io) {
 	struct stat st;
-	if (fstat(dat->fd, &st) < 0) { error("couldn't get size of file '%s'", dat->fileName); }
+	if (fstat(io->fd, &st) < 0) { error("couldn't get size of file '%s'", io->fileName); }
 	return st.st_size;
 }
 
-void data_read(struct Data *dat, uint8_t *buf, off_t size) {
+void io_read(struct IO *io, uint8_t *buf, off_t size) {
 	ssize_t nread = 0;
 	while (nread < size) {
-		ssize_t rc = read(dat->fd, buf + nread, size);
-		if (rc < 0) { error("error reading data from '%s'", dat->fileName); }
+		ssize_t rc = read(io->fd, buf + nread, size);
+		if (rc < 0) { error("error reading data from '%s'", io->fileName); }
 		nread += rc;
 	}
 }
@@ -201,13 +201,13 @@ int main(int argc, char **argv) {
 		error("-r must be specified to specify read size");
 	}
 
-	struct Data *dataIn = NULL;
+	struct IO *dataIn = NULL;
 
 	if (g_fileName) {
-		dataIn = data_open(g_fileName);
-		g_dataSize = data_getSize(dataIn);
+		dataIn = io_open(g_fileName);
+		g_dataSize = io_getSize(dataIn);
 		if (g_dataSize > 65536) { error("Size of file '%s' exceeds 64K", g_fileName); }
-		data_read(dataIn, g_dataBuf, g_dataSize);
+		io_read(dataIn, g_dataBuf, g_dataSize);
 	}
 
 	if (g_writeProtectDisable) {
