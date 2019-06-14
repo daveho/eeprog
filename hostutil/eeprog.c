@@ -19,10 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// The serial communication setup code was shamelessly stolen from the following
-// StackOverflow page:
-//   https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
-
 #include <stdint.h>
 #include <errno.h>
 #include <fcntl.h> 
@@ -35,11 +31,18 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+//
+// IO channel data type.
+//
 struct IO {
 	const char *fileName;
 	int fd;
+	FILE *fh;
 };
 
+//
+// Global variables
+//
 const char *g_port, *g_fileName, *g_outputFileName;
 int g_writeProtectEnable, g_writeProtectDisable;
 int g_verify;
@@ -49,6 +52,11 @@ int g_showHelp;
 off_t g_dataSize;
 uint8_t g_dataBuf[65536];
 
+//
+// Configure serial communication parameters:
+// code stolen from:
+//   https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
+//
 int set_interface_attribs(int fd, int speed) {
 	struct termios tty;
 
@@ -83,13 +91,22 @@ int set_interface_attribs(int fd, int speed) {
 	return 0;
 }
 
+//
+// Display an error message.
+//
 void display_error(const char *tag, const char *fmt, va_list args) {
 	fprintf(stderr, "%s: ", tag);
 	vfprintf(stderr, fmt, args);
 }
 
-// Function for a fatal usage error.
-void usage_error(const char *fmt, ...) {
+//
+// Display an illegal state error message, meaning
+// that an illegal state has been reached (possibly because
+// of bad input), but there is no errno value from which
+// to produce a more specific diagnostic.
+// Terminates the program.
+//
+void illegal_state(const char *fmt, ...) {
 	va_list args;
 
 	va_start(args, fmt);
@@ -100,29 +117,38 @@ void usage_error(const char *fmt, ...) {
 	exit(1);
 }
 
-// Function for a fatal runtime error, in which errno is set
+//
+// Display a fatal runtime error, in which errno is set
 // and we can print a meaningful diagnostic.
+// Terminates the program.
+//
 void fatal(const char *fmt, ...) {
 	va_list args;
 
 	va_start(args, fmt);
 	display_error("Error", fmt, args);
+	fprintf(stderr, ": %s", strerror(errno));
 	fprintf(stderr, "\n");
 	va_end(args);
 
 	exit(1);
 }
 
+//
+// Display a non-fatal warning message.
+//
 void warn(const char *fmt, ...) {
 	va_list args;
 
 	va_start(args, fmt);
 	display_error("Warning", fmt, args);
-	fprintf(stderr, ": %s", strerror(errno));
 	fprintf(stderr, "\n");
 	va_end(args);
 }
 
+//
+// Display help information.
+//
 void showHelp() {
 	printf("Usage: eeprog <options>\n"
 		"Options are:\n"
@@ -137,41 +163,132 @@ void showHelp() {
 		);
 }
 
+//
+// Allocate memory buffer.
+//
 void *xmalloc(size_t n) {
 	void *buf = malloc(n);
 	if (!buf) { fatal("memory allocation failure"); }
 	return buf;
 }
 
+//
+// Duplicate a character string.
+//
 char *xstrdup(const char *s) {
 	char *copy = strdup(s);
 	if (!copy) { fatal("memory allocation failure"); }
 	return copy;
 }
 
+//
+// Open an IO channel: mode is a Unix file mode.
+//
 struct IO *io_open(const char *fileName, int mode) {
 	struct IO *io = xmalloc(sizeof(struct IO));
 	io->fd = open(fileName, mode);
 	if (io->fd < 0) { fatal("couldn't open '%s'", fileName); }
 	io->fileName = fileName;
+	switch (mode) {
+	case O_RDONLY:
+		io->fh = fdopen(io->fd, "r"); break;
+	case O_WRONLY:
+		io->fh = fdopen(io->fd, "w"); break;
+	case O_RDWR:
+		io->fh = fdopen(io->fd, "w+"); break;
+	default:
+		illegal_state("unknown file mode %d", mode);
+	}
+	if (!io->fh) { fatal("fdopen failed"); }
 	return io;
 }
 
+//
+// Get the size of a file.
+//
 off_t io_getSize(struct IO *io) {
 	struct stat st;
 	if (fstat(io->fd, &st) < 0) { fatal("couldn't get size of file '%s'", io->fileName); }
 	return st.st_size;
 }
 
+//
+// Read data from a file or IO device: fatal error
+// if an I/O error occurs or not enough data can be read.
+//
 void io_read(struct IO *io, uint8_t *buf, off_t size) {
-	ssize_t nread = 0;
-	while (nread < size) {
-		ssize_t rc = read(io->fd, buf + nread, size);
-		if (rc < 0) { fatal("error reading data from '%s'", io->fileName); }
-		nread += rc;
+	size_t rc = fread(buf, 1, size, io->fh);
+	if (rc != size) { fatal("failed to read %ld bytes", (long)size); }
+}
+
+//
+// Scan until the prompt "> " is seen.
+//
+void io_scanUntilPrompt(struct IO *io) {
+	int last = -1;
+	for (;;) {
+		int c = fgetc(io->fh);
+		if (c == EOF) { fatal("EOF before prompt was seen"); }
+		if (c == ' ' && last == '>') {
+			// Saw the prompt!
+			return;
+		}
+		last = c;
 	}
 }
 
+//
+// Read a line of text from IO channel.
+// Returns a malloc'ed buffer.
+//
+char *io_readLine(struct IO *io) {
+	// The longest line would be the result of an R command
+	// with a count of 255, which would be 512 bytes (255
+	// data bytes at 2 hex digits per byte, and a \r\n
+	// line terminator.)  We'll read up to 1000 bytes,
+	// ignoring anything after 1000.
+	char *buf = xmalloc(1024);
+	size_t pos = 0;
+	for (;;) {
+		int c = fgetc(io->fh);
+		if (c == EOF) {
+			break;
+		}
+		if (pos < 1000) {
+			buf[pos++] = (char) c;
+		}
+		if (c == '\n') {
+			break;
+		}
+	}
+	buf[pos] = '\0';
+	if (pos >= 2 && buf[pos-2] == '\r' && buf[pos-1] == '\n') {
+		buf[pos-2] = '\0';
+	} else if (pos >= 1 && buf[pos-1] == '\n') {
+		buf[pos-1] = '\0';
+	}
+	return buf;
+}
+
+void io_expectOk(struct IO *io) {
+	char *resp = io_readLine(io);
+	if (strcmp(resp, "OK") != 0) { illegal_state("did not see OK response"); }
+	free(resp);
+}
+
+void io_write(struct IO *io, const void *buf, size_t n) {
+	size_t rc = fwrite(buf, 1, n, io->fh);
+	if (rc != n) { illegal_state("could not write %lu bytes", (unsigned long) n); }
+}
+
+void io_send(struct IO *io, const char *s) {
+	size_t n = strlen(s);
+	io_write(io, s, n);
+}
+
+//
+// Main function.
+//
 int main(int argc, char **argv) {
 	int opt;
 	while ((opt = getopt(argc, argv, "p:f:o:r:NDvh")) != -1) {
@@ -186,7 +303,7 @@ int main(int argc, char **argv) {
 			{
 				int readSize;
 				if (sscanf(optarg, "%d", &readSize) != 1) {
-					usage_error("invalid data size '%s'", optarg);
+					illegal_state("invalid data size '%s'", optarg);
 				}
 				g_dataReadSize = readSize;
 			}
@@ -209,14 +326,14 @@ int main(int argc, char **argv) {
 	}
 
 	if (!g_port) {
-		usage_error("comm port must be specified");
+		illegal_state("comm port must be specified");
 	}
 
 	if (!g_fileName && !g_outputFileName) {
-		usage_error("either -f or -o must be specified");
+		illegal_state("either -f or -o must be specified");
 	}
 	if (g_outputFileName && g_dataReadSize < 0) {
-		usage_error("-r must be specified to specify read size");
+		illegal_state("-r must be specified to specify read size");
 	}
 
 	struct IO *comm = io_open(g_port, O_RDWR);
@@ -224,12 +341,25 @@ int main(int argc, char **argv) {
 		fatal("could not configure communication parameters for '%s'", g_port);
 	}
 
+	// This is just for testing.
+	io_scanUntilPrompt(comm);
+	printf("Saw prompt!\n");
+
+	io_send(comm, "?\r\n");
+	char *resp = io_readLine(comm);
+	printf("%s\n", resp);
+	free(resp);
+	io_expectOk(comm);
+
+	return 0;
+
+#if 0
 	struct IO *dataIn = NULL;
 
 	if (g_fileName) {
 		dataIn = io_open(g_fileName, O_RDONLY);
 		g_dataSize = io_getSize(dataIn);
-		if (g_dataSize > 65536) { usage_error("Size of file '%s' exceeds 64K", g_fileName); }
+		if (g_dataSize > 65536) { illegal_state("Size of file '%s' exceeds 64K", g_fileName); }
 		io_read(dataIn, g_dataBuf, g_dataSize);
 	}
 
@@ -248,6 +378,7 @@ int main(int argc, char **argv) {
 	if (g_verify || g_outputFileName) {
 		// TODO: read data
 	}
+#endif
 }
 
 // vim:ts=2:
