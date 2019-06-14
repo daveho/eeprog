@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <regex.h>
 
 //
 // IO channel data type.
@@ -286,6 +287,23 @@ void io_send(struct IO *io, const char *s) {
 	io_write(io, s, n);
 }
 
+void parseId(char *id) {
+	regex_t regex;
+	int rc;
+
+	if (regcomp(&regex, "^eeprog ([0-9]+)\\.([0-9]+)", REG_EXTENDED) != 0) {
+		illegal_state("could not compile regex to parse id string");
+	}
+
+	regmatch_t capture[3];
+	rc = regexec(&regex, id, 3, capture, 0);
+	if (rc != 0) { illegal_state("id string has unexpected format"); }
+	id[capture[1].rm_eo] = '\0';
+	id[capture[2].rm_eo] = '\0';
+
+	printf("Detected firmware version %s.%s\n", &id[capture[1].rm_so], &id[capture[2].rm_so]);
+}
+
 //
 // Main function.
 //
@@ -346,9 +364,9 @@ int main(int argc, char **argv) {
 	printf("Saw prompt!\n");
 
 	io_send(comm, "?\r\n");
-	char *resp = io_readLine(comm);
-	printf("%s\n", resp);
-	free(resp);
+	char *id = io_readLine(comm);
+	parseId(id);
+	free(id);
 	io_expectOk(comm);
 
 	return 0;
