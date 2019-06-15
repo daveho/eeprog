@@ -32,6 +32,9 @@
 #include <unistd.h>
 #include <regex.h>
 
+#define VER_MAJOR 1
+#define VER_MINOR 1
+
 //
 // IO channel data type.
 //
@@ -186,15 +189,16 @@ char *xstrdup(const char *s) {
 //
 // Open an IO channel: mode is a Unix file mode.
 //
-struct IO *io_open(const char *fileName, int mode) {
+struct IO *io_open(const char *fileName, int mode, int attr) {
 	struct IO *io = xmalloc(sizeof(struct IO));
-	io->fd = open(fileName, mode);
+	io->fd = open(fileName, mode, attr);
 	if (io->fd < 0) { fatal("couldn't open '%s'", fileName); }
 	io->fileName = fileName;
 	switch (mode) {
 	case O_RDONLY:
 		io->fh = fdopen(io->fd, "r"); break;
 	case O_WRONLY:
+	case (O_WRONLY|O_CREAT):
 		io->fh = fdopen(io->fd, "w"); break;
 	case O_RDWR:
 		io->fh = fdopen(io->fd, "w+"); break;
@@ -397,7 +401,7 @@ void readFullData(struct IO *comm) {
 	io_send(comm, "A0000\r\n");
 	io_expectOk(comm);
 
-	off_t remain = g_dataSize;
+	off_t remain = g_dataReadSize;
 
 	int pos = 0;
 
@@ -446,6 +450,7 @@ int verifyFullData() {
 			return 0;
 		}
 	}
+	printf("Successful verification!\n");
 	return 1;
 }
 
@@ -453,6 +458,9 @@ int verifyFullData() {
 // Main function.
 //
 int main(int argc, char **argv) {
+	printf("eeprog host program version %d.%d (https://github.com/daveho/eeprog)\n",
+		VER_MAJOR, VER_MINOR);
+
 	// Parse options
 	int opt;
 	while ((opt = getopt(argc, argv, "p:f:o:r:NDvh")) != -1) {
@@ -500,7 +508,7 @@ int main(int argc, char **argv) {
 		illegal_state("-r must be specified to specify read size");
 	}
 
-	struct IO *comm = io_open(g_port, O_RDWR);
+	struct IO *comm = io_open(g_port, O_RDWR, 0);
 	if (set_interface_attribs(comm->fd, B57600) != 0) {
 		fatal("could not configure communication parameters for '%s'", g_port);
 	}
@@ -511,7 +519,7 @@ int main(int argc, char **argv) {
 	struct IO *dataIn = NULL;
 
 	if (g_fileName) {
-		dataIn = io_open(g_fileName, O_RDONLY);
+		dataIn = io_open(g_fileName, O_RDONLY, 0);
 		g_dataSize = io_getSize(dataIn);
 		if (g_dataSize > 65536) { illegal_state("Size of file '%s' exceeds 64K", g_fileName); }
 		io_read(dataIn, g_dataBuf, g_dataSize);
@@ -549,6 +557,12 @@ int main(int argc, char **argv) {
 			printf("Verification failed!\n");
 			exit(1);
 		}
+	}
+
+	if (g_outputFileName) {
+		printf("Writing read data to '%s'\n", g_outputFileName);
+		struct IO *dataOut = io_open(g_outputFileName, O_WRONLY|O_CREAT, 0600);
+		io_write(dataOut, g_dataReadBuf, g_dataReadSize);
 	}
 
 	printf("Done!\n");
