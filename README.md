@@ -13,7 +13,11 @@ The firmware (in the [eeprog](eeprog) directory) *seems* to work correctly at th
 * enable write protection
 * perform a software chip erase
 
-There is no host software yet.
+The host software is in the [hostutil](hostutil) directory.  It seems to work, although more testing is needed.  Currently, it only runs on Unix-like systems (Linux, BSD, MacOS, etc.)
+
+## Host software
+
+TODO: information about using the host software.
 
 ## Firmware protocol
 
