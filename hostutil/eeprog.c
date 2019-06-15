@@ -52,6 +52,7 @@ int g_showHelp;
 
 off_t g_dataSize;
 uint8_t g_dataBuf[65536];
+uint8_t g_dataReadBuf[65536];
 
 //
 // Configure serial communication parameters:
@@ -271,22 +272,41 @@ char *io_readLine(struct IO *io) {
 	return buf;
 }
 
+//
+// Expect the "OK" response indicating the successful execution
+// of a command.
+//
 void io_expectOk(struct IO *io) {
 	char *resp = io_readLine(io);
 	if (strcmp(resp, "OK") != 0) { illegal_state("did not see OK response"); }
 	free(resp);
 }
 
+//
+// Write data to specified IO.
+//
 void io_write(struct IO *io, const void *buf, size_t n) {
 	size_t rc = fwrite(buf, 1, n, io->fh);
 	if (rc != n) { illegal_state("could not write %lu bytes", (unsigned long) n); }
+	fflush(io->fh);
 }
 
-void io_send(struct IO *io, const char *s) {
-	size_t n = strlen(s);
-	io_write(io, s, n);
+//
+// Send a string to specified IO.
+//
+void io_send(struct IO *io, const char *s, ...) {
+	va_list args;
+
+	va_start(args, s);
+	vfprintf(io->fh, s, args);
+	va_end(args);
+
+	fflush(io->fh);
 }
 
+//
+// Parse id string received from firmware.
+//
 void parseId(char *id) {
 	regex_t regex;
 	int rc;
@@ -301,13 +321,134 @@ void parseId(char *id) {
 	id[capture[1].rm_eo] = '\0';
 	id[capture[2].rm_eo] = '\0';
 
+	// If we wanted to do something with the firmware version information,
+	// this is where we'd do it.
+
 	printf("Detected firmware version %s.%s\n", &id[capture[1].rm_so], &id[capture[2].rm_so]);
+}
+
+//
+// Initiate communication with programmer by:
+// - waiting for prompt
+// - issuing '?' command
+// - parsing ID string (result of '?') command
+// - receiving the "OK" response from the '?' command
+// If this is successful then we should be ready to communicate
+// with the programmer to do actual reading or writing of data.
+//
+void beginComm(struct IO *comm) {
+	io_scanUntilPrompt(comm);
+	io_send(comm, "?\r\n");
+	char *id = io_readLine(comm);
+	parseId(id);
+	free(id);
+	io_expectOk(comm);
+}
+
+//
+// Write g_dataSize bytes of data in g_dataBuf to the EEPROM
+// device, starting at address 0.
+//
+void writeFullData(struct IO *comm) {
+	printf("Writing %d bytes", (int)g_dataSize);
+	fflush(stdout);
+
+	// Make sure the programmer is at address 0.
+	io_scanUntilPrompt(comm);
+	io_send(comm, "A0000\r\n");
+	io_expectOk(comm);
+
+	off_t remain = g_dataSize;
+
+	int pos = 0;
+
+	while (remain > 0) {
+		// Progress indication every 1K.
+		if (pos % 1024 == 0) {
+			printf(".");
+			fflush(stdout);
+		}
+
+		// Write one page of up to 64 bytes.
+		// Since we're starting at address 0, and all writes
+		// except the last will be exactly 64 bytes, we're
+		// guaranteed to always write at a page-aligned address.
+		int toWrite = (remain >= 64) ? 64 : (int)remain;
+		io_scanUntilPrompt(comm);
+		io_send(comm, "P%02x", toWrite);
+		for (int i = 0; i < toWrite; i++) {
+			io_send(comm, "%02x", g_dataBuf[pos++]);
+		}
+		io_send(comm, "\r\n");
+		io_expectOk(comm);
+
+		remain -= toWrite;
+	}
+
+	printf("done\n");
+}
+
+void readFullData(struct IO *comm) {
+	printf("Reading %d bytes", (int)g_dataReadSize);
+	fflush(stdout);
+
+	// Make sure the programmer is at address 0.
+	io_scanUntilPrompt(comm);
+	io_send(comm, "A0000\r\n");
+	io_expectOk(comm);
+
+	off_t remain = g_dataSize;
+
+	int pos = 0;
+
+	while (remain >= 0) {
+		// Progress indication every 1K.
+		if (pos % 1024 == 0) {
+			printf(".");
+			fflush(stdout);
+		}
+
+		// Read 256 bytes at a time
+		int toRead = (remain >= 256) ? 256 : (int)remain;
+		io_scanUntilPrompt(comm);
+		io_send(comm, "R%02x\r\n", toRead);
+
+		// Read data
+		char *data = io_readLine(comm);
+		io_expectOk(comm);
+
+		// Parse returned hex data and store it in g_dataReadBuf
+		size_t dataLen = strlen(data);
+		if (dataLen != (size_t)toRead * 2) { illegal_state("returned data is wrong size"); }
+		for (int i = 0; i < toRead; i++) {
+			int val;
+			if (sscanf(data + i*2, "%02x", &val) != 1) { illegal_state("invalid data returned"); }
+			g_dataReadBuf[pos++] = (uint8_t) val;
+		}
+		free(data);
+
+		remain -= toRead;
+	}
+
+	printf("done\n");
+}
+
+int verifyFullData() {
+	for (int i = 0; i < g_dataSize; i++) {
+		if (g_dataBuf[i] != g_dataReadBuf[i]) {
+			printf("Verify: incorrect data byte at address %04x (wrote %02x, read %02x)\n",
+				i, g_dataBuf[i], g_dataReadBuf[i]);
+			return 0;
+		}
+	}
+	return 1;
 }
 
 //
 // Main function.
 //
 int main(int argc, char **argv) {
+	// Parse options
 	int opt;
 	while ((opt = getopt(argc, argv, "p:f:o:r:NDvh")) != -1) {
 		switch (opt) {
@@ -359,19 +500,9 @@ int main(int argc, char **argv) {
 		fatal("could not configure communication parameters for '%s'", g_port);
 	}
 
-	// This is just for testing.
-	io_scanUntilPrompt(comm);
-	printf("Saw prompt!\n");
+	// Initiate communication with programmer
+	beginComm(comm);
 
-	io_send(comm, "?\r\n");
-	char *id = io_readLine(comm);
-	parseId(id);
-	free(id);
-	io_expectOk(comm);
-
-	return 0;
-
-#if 0
 	struct IO *dataIn = NULL;
 
 	if (g_fileName) {
@@ -382,21 +513,38 @@ int main(int argc, char **argv) {
 	}
 
 	if (g_writeProtectDisable) {
-		// TODO: disable write protection
+		printf("Disabling write protection...\n");
+		io_send(comm, "D\r\n");
 	}
 
 	if (g_fileName) {
-		// TODO: write data to EEPROM
+		writeFullData(comm);
 	}
 
 	if (g_writeProtectEnable) {
-		// TODO: enable write protection
+		printf("Enabling write protection...\n");
+		io_send(comm, "N\r\n");
 	}
 
 	if (g_verify || g_outputFileName) {
-		// TODO: read data
+		if (g_verify) {
+			// When verifying, the idea is to read back all of the
+			// data that was written and confirm it's the same.
+			g_dataReadSize = g_dataSize;
+		}
+		readFullData(comm);
 	}
-#endif
+
+	if (g_verify) {
+		if (!verifyFullData()) {
+			printf("Verification failed!\n");
+			exit(1);
+		}
+	}
+
+	printf("Done!\n");
+
+	return 0;
 }
 
 // vim:ts=2:
