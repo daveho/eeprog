@@ -401,16 +401,17 @@ void readFullData(struct IO *comm) {
 
 	int pos = 0;
 
-	while (remain >= 0) {
+	while (remain > 0) {
 		// Progress indication every 1K.
 		if (pos % 1024 == 0) {
 			printf(".");
 			fflush(stdout);
 		}
 
-		// Read 256 bytes at a time
-		int toRead = (remain >= 256) ? 256 : (int)remain;
+		// Read 128 bytes at a time
+		int toRead = (remain >= 128) ? 128 : (int)remain;
 		io_scanUntilPrompt(comm);
+		//printf("R%02x\n", toRead);
 		io_send(comm, "R%02x\r\n", toRead);
 
 		// Read data
@@ -419,7 +420,11 @@ void readFullData(struct IO *comm) {
 
 		// Parse returned hex data and store it in g_dataReadBuf
 		size_t dataLen = strlen(data);
-		if (dataLen != (size_t)toRead * 2) { illegal_state("returned data is wrong size"); }
+		if (dataLen != (size_t)toRead * 2) {
+			printf("Received data: %s\n", data);
+			illegal_state("returned data is wrong size (expected %d, received %lu)",
+				toRead * 2, (unsigned long) dataLen);
+		}
 		for (int i = 0; i < toRead; i++) {
 			int val;
 			if (sscanf(data + i*2, "%02x", &val) != 1) { illegal_state("invalid data returned"); }
@@ -514,7 +519,9 @@ int main(int argc, char **argv) {
 
 	if (g_writeProtectDisable) {
 		printf("Disabling write protection...\n");
+		io_scanUntilPrompt(comm);
 		io_send(comm, "D\r\n");
+		io_expectOk(comm);
 	}
 
 	if (g_fileName) {
@@ -523,7 +530,9 @@ int main(int argc, char **argv) {
 
 	if (g_writeProtectEnable) {
 		printf("Enabling write protection...\n");
+		io_scanUntilPrompt(comm);
 		io_send(comm, "N\r\n");
+		io_expectOk(comm);
 	}
 
 	if (g_verify || g_outputFileName) {
