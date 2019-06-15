@@ -25,7 +25,7 @@ The firmware listens for commands on the UART (57600 bps, 8N1).  You can interac
 
 The firmware prints the prompt `> ` (greater than followed by space) when it is ready to receive a command.
 
-The commands are as follows.  All data and numeric parameters are specified using hexadecimal.  *aaaa* is an address.  *cc* is a count.  *dd* is a data byte.  Each command must be terminated by a line ending (either CRLF or just LF).  If a command has output, it will be on a single line.  All commands output either an "Ok" line or an "Error: ..." line depending on whether the command succeeded or failed.  The "Ok" output is generated after the command's output (if any).
+The commands are as follows.  All data and numeric parameters are specified using hexadecimal.  *aaaa* is an address.  *cc* is a count.  *dd* is a data byte.  Each command must be terminated by a line ending (either CRLF or just LF).  If a command has output, it will be on a single line.  All commands output either an "OK" line or an "Error: ..." line depending on whether the command succeeded or failed.  The "OK" output is generated after the command's output (if any).
 
 All read and write commands increment the current address by the number of bytes read or written.
 
