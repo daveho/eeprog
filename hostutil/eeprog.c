@@ -309,6 +309,15 @@ void io_send(struct IO *io, const char *s, ...) {
 }
 
 //
+// Close specified IO channel.
+// Deletes the IO object.
+//
+void io_close(struct IO *io) {
+	fclose(io->fh);
+	free(io);
+}
+
+//
 // Parse id string received from firmware.
 //
 void parseId(char *id) {
@@ -516,13 +525,13 @@ int main(int argc, char **argv) {
 	// Initiate communication with programmer
 	beginComm(comm);
 
-	struct IO *dataIn = NULL;
-
 	if (g_fileName) {
+		struct IO *dataIn = NULL;
 		dataIn = io_open(g_fileName, O_RDONLY, 0);
 		g_dataSize = io_getSize(dataIn);
 		if (g_dataSize > 65536) { illegal_state("Size of file '%s' exceeds 64K", g_fileName); }
 		io_read(dataIn, g_dataBuf, g_dataSize);
+		io_close(dataIn);
 	}
 
 	if (g_writeProtectDisable) {
@@ -563,7 +572,10 @@ int main(int argc, char **argv) {
 		printf("Writing read data to '%s'\n", g_outputFileName);
 		struct IO *dataOut = io_open(g_outputFileName, O_WRONLY|O_CREAT, 0600);
 		io_write(dataOut, g_dataReadBuf, g_dataReadSize);
+		io_close(dataOut);
 	}
+
+	io_close(comm);
 
 	printf("Done!\n");
 
