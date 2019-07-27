@@ -15,11 +15,68 @@ The firmware (in the [eeprog](eeprog) directory) *seems* to work correctly at th
 * enable write protection
 * perform a software chip erase
 
-The host software is in the [hostutil](hostutil) directory.  It seems to work, although more testing is needed.  Currently, it has only been tested on Linux, but might work on other Unix-like systems (such as MacOS and FreeBSD.)
-
 ## Host software
 
-TODO: information about using the host software.
+The host software is in the [hostutil](hostutil) directory.  It seems to work, although more testing is needed.  Currently, it has only been tested on Linux, but might work on other Unix-like systems (such as MacOS and FreeBSD.)
+
+To build the host software, run the command `make` in the `hostutil` directory.  Copy the resulting executable (`eeprog`) to a directory that is on your executable path.
+
+The command `eeprog -h` will print the following usage information:
+
+```
+eeprog host program version 1.1 (https://github.com/daveho/eeprog)
+Usage: eeprog <options>
+Options are:
+  -f <filename>     specify input filename
+  -p <port>         specify comm port
+  -o <filename>     specify output filename
+  -r <num bytes>    specify number of bytes to read
+  -N                enable write protection
+  -D                disable write protection
+  -v                verify data after writing
+  -h                print this help text
+```
+
+Here are some basic usage examples.
+
+Write a binary file called `blink.bin` to a 32K EEPROM, disabling write protection (necessary if the device is currently write-protected), enabling write protection, and then verifying that the data was written correctly:
+
+```
+eeprog -f blink.bin -p /dev/ttyUSB0 -D -v -N
+```
+
+This command should produce something like the following output:
+
+```
+eeprog host program version 1.1 (https://github.com/daveho/eeprog)
+Detected firmware version 0.2
+Disabling write protection...
+Writing 32768 bytes................................done
+Enabling write protection...
+Reading 32768 bytes................................done
+Successful verification!
+Done!
+```
+
+Note that you should change `/dev/ttyUSB0` as appropriate depending on the serial port device assigned to the Arduino.
+
+Reading 32K of data from an EEPROM and saving the data in the output file `data.bin`:
+
+```
+eeprog -r 32768 -p /dev/ttyUSB0 -o data.bin
+```
+
+This command should produce something like the following output:
+
+```
+eeprog host program version 1.1 (https://github.com/daveho/eeprog)
+Detected firmware version 0.2
+Reading 32768 bytes................................done
+Writing read data to 'data.bin'
+Done!
+```
+
+Again, change `/dev/ttyUSB0` as appropriate.
 
 ## Firmware protocol
 
