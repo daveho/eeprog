@@ -39,7 +39,7 @@ Options are:
 
 Here are some basic usage examples.
 
-Write a binary file called `blink.bin` to a 32K EEPROM, disabling write protection (necessary if the device is currently write-protected), enabling write protection, and then verifying that the data was written correctly:
+Write a binary file called `blink.bin` to a 32K EEPROM, disabling write protection before writing (necessary if the device is currently write-protected), enabling write protection after writing, and then verifying that the data was written correctly:
 
 ```
 eeprog -f blink.bin -p /dev/ttyUSB0 -D -v -N
