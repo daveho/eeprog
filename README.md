@@ -2,7 +2,9 @@
 
 This is an attempt to make a programmer for 28C64 and 28C256 EEPROMs using an Arduino Nano and 74HC595/74HC165 shift registers.
 
-The hardware seems to work.  The (KiCad) schematic is in the [hw](hw) directory.
+The hardware seems to work.  The (KiCad) schematic is in the [hw](hw) directory.  The circuit has been constructed on a protoboard:
+
+> ![picture of eeprog hardware](img/eeprog-pic.jpg)
 
 The firmware (in the [eeprog](eeprog) directory) *seems* to work correctly at this point.  It can:
 
@@ -13,7 +15,7 @@ The firmware (in the [eeprog](eeprog) directory) *seems* to work correctly at th
 * enable write protection
 * perform a software chip erase
 
-The host software is in the [hostutil](hostutil) directory.  It seems to work, although more testing is needed.  Currently, it only runs on Unix-like systems (Linux, BSD, MacOS, etc.)
+The host software is in the [hostutil](hostutil) directory.  It seems to work, although more testing is needed.  Currently, it has only been tested on Linux, but might work on other Unix-like systems (such as MacOS and FreeBSD.)
 
 ## Host software
 
