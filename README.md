@@ -1,6 +1,6 @@
 # 28C64/28C256 EEPROM programmer
 
-This is an attempt to make a programmer for 28C64 and 28C256 EEPROMs using an Arduino Nano and 74HC595/74HC165 shift registers.
+This is an attempt to make a programmer for 28C64 and 28C256 EEPROMs using an Arduino Nano and 74HC595/74HCT165 shift registers.
 
 The hardware seems to work.  The (KiCad) schematic is in the [hw](hw) directory.  The circuit has been constructed on a protoboard:
 
