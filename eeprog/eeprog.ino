@@ -24,7 +24,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 1
+#define VERSION_MINOR 2
 
 // Note: constants for I/O pins match the net names used in the
 // schematic.  Also: there are some hard-coded references to
@@ -115,6 +115,14 @@ void pulseLow(uint8_t pin) {
   digitalWrite(pin, HIGH);
 }
 
+// Send a low pulse on given output pin.
+void pulseLowSlow(uint8_t pin) {
+  digitalWrite(pin, LOW);
+  delayMicroseconds(1);
+  digitalWrite(pin, HIGH);
+  delayMicroseconds(1);
+}
+
 // Drive specified address to the EEPROM's address inputs.
 void setAddr(uint16_t addr) {
   // digitalWrite is too slow to meet tBLC (byte load cycle time),
@@ -167,7 +175,11 @@ void setData(uint8_t data) {
 // Read data byte from the EEPROM's data lines.
 uint8_t readDataByte() {
   // parallel load data
-  pulseLow(RDPL);
+  // For some reason, we sometimes get wrong data (e.g., 0xFF)
+  // back when reading.  The pulseLowSlow function adds some
+  // delays, in case the problem is that the '165 shift register
+  // has trouble latching the data from the EEPROM.
+  pulseLowSlow(RDPL);
 
   // read serial data from shift register
   uint8_t data = 0;
