@@ -626,16 +626,8 @@ Wire Notes Line
 	6100 5400 4200 5400
 Wire Notes Line
 	4200 5400 4200 7700
-Text Notes 7850 900  0    50   ~ 0
+Text Notes 7550 800  0    50   ~ 0
 28C64 or 28C256 EEPROM
-Wire Notes Line
-	6850 750  6850 3250
-Wire Notes Line
-	6850 3250 9500 3250
-Wire Notes Line
-	9500 3250 9500 750 
-Wire Notes Line
-	9500 750  6850 750 
 Text Notes 7450 3950 0    50   ~ 0
 Parallel to serial\nshift register to read\nback data
 Wire Notes Line
@@ -958,4 +950,40 @@ Text Notes 1350 7750 0    50   ~ 0
 Decoupling caps: place near power\npins of U1-U5.
 Text Notes 700  4000 0    50   ~ 0
 Data direction\nindicators.
+$Comp
+L power:GND #PWR?
+U 1 1 5D81E85C
+P 8300 3150
+F 0 "#PWR?" H 8300 2900 50  0001 C CNN
+F 1 "GND" H 8305 2977 50  0000 C CNN
+F 2 "" H 8300 3150 50  0001 C CNN
+F 3 "" H 8300 3150 50  0001 C CNN
+	1    8300 3150
+	1    0    0    -1  
+$EndComp
+Wire Notes Line
+	9650 600  9650 3400
+Wire Notes Line
+	6650 600  9650 600 
+Wire Notes Line
+	6650 3400 9650 3400
+Wire Notes Line
+	6650 600  6650 3400
+Wire Wire Line
+	8500 1250 8500 1100
+Wire Wire Line
+	8500 1100 8900 1100
+Wire Wire Line
+	8900 1100 8900 1000
+$Comp
+L power:VCC #PWR?
+U 1 1 5D881F1E
+P 8900 1000
+F 0 "#PWR?" H 8900 850 50  0001 C CNN
+F 1 "VCC" H 8917 1173 50  0000 C CNN
+F 2 "" H 8900 1000 50  0001 C CNN
+F 3 "" H 8900 1000 50  0001 C CNN
+	1    8900 1000
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
